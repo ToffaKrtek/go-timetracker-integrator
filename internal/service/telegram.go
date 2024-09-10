@@ -1,8 +1,6 @@
 package service
 
 import (
-	"os"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -48,14 +46,8 @@ func sendMsg(tgMsg TgMsg) error {
 }
 
 func sendFile(tgMsg TgMsg) error {
-
-    // Создаем объект InputFile
-    inputFile := tgbotapi.File{
-      FilePath: tgMsg.GetFilePath(),
-    }
-
-    // Создаем сообщение с файлом
+    inputFile := tgbotapi.FilePath(tgMsg.GetFilePath())
     msg := tgbotapi.NewDocument(chatId, inputFile)
-    _, err = botApi.Send(msg)
+    _, err := botApi.Send(msg)
   return err
 }
