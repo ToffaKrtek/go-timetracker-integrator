@@ -21,7 +21,7 @@ type TgConfig interface {
   GetChatId() int64
 }
 
-func Init(conf TgConfig) {
+func InitTelegram(conf TgConfig) {
   bot, err := tgbotapi.NewBotAPI(conf.GetTelegramToken())
   if err != nil {
     panic(err)

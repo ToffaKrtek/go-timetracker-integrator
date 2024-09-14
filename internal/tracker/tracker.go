@@ -17,7 +17,7 @@ import (
 var usageTime = make(map[string]time.Duration)
 var fullTime time.Duration
 
-func Run(conf config.Config) {
+func Run(conf *config.Config) {
 	go trackUsage(conf.UserWatcher)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
