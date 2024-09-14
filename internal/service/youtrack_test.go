@@ -13,9 +13,9 @@ type YoutrackMock struct {
   mock.Mock
 }
 
-func (m *YoutrackMock) GetTasks() ([]Task, error) {
+func (m *YoutrackMock) GetTasks() (*Tasks, error) {
   args := m.Called()
-  return args.Get(0).([]Task), args.Error(1)
+  return args.Get(0).(*Tasks), args.Error(1)
 }
 
 func TestGet(t *testing.T) {
@@ -25,57 +25,70 @@ func TestGet(t *testing.T) {
 func TestSaveTasks(t *testing.T){
   assert := assert.New(t)
   tests := []struct{
-    tasks []Task
-    expected []Task
+    tasks Tasks
+    expected Tasks
   }{
     {
-    tasks: []Task{
+    tasks: Tasks{
       Task{
-        ID: "test-1",
-        Title: "test-1 title",
-        Status: "open",
+      	ID:        "test-1",
+      	Title:     "test-1 title",
+      	Status:    "open",
+      	Assignee:  "",
+      	CreatedBy: "",
       },
     },
-    expected: []Task{
+    expected: Tasks{
       Task{
-        ID: "test-1",
-        Title: "test-1 title",
-        Status: "open",
+      	ID:        "test-1",
+      	Title:     "test-1 title",
+      	Status:    "open",
+      	Assignee:  "",
+      	CreatedBy: "",
       },
     },
     },
     {
-    tasks: []Task{
+    tasks: Tasks{
       Task{
-        ID: "test-2",
-        Title: "test-2 title",
-        Status: "open",
+      	ID:        "test-2",
+      	Title:     "test-2 title",
+      	Status:    "open",
+      	Assignee:  "",
+      	CreatedBy: "",
       },
       Task{
-        ID: "test-1",
-        Status: "closed",
+      	ID:        "test-1",
+      	Title:     "",
+      	Status:    "closed",
+      	Assignee:  "",
+      	CreatedBy: "",
       },
     },
-    expected: []Task{
+    expected: Tasks{
       Task{
-        ID: "test-1",
-        Title: "test-1 title",
-        Status: "closed",
+      	ID:        "test-1",
+      	Title:     "test-1 title",
+      	Status:    "closed",
+      	Assignee:  "",
+      	CreatedBy: "",
       },
       Task{
-        ID: "test-2",
-        Title: "test-2 title",
-        Status: "open",
+      	ID:        "test-2",
+      	Title:     "test-2 title",
+      	Status:    "open",
+      	Assignee:  "",
+      	CreatedBy: "",
       },
     },
     },
   }
   testFileName := fmt.Sprintf("test-%s.json", time.Now().Format("2006-01-02T15:04:05.000000"))
   for _, test := range tests {
-    res, err := saveTasks(test.tasks, testFileName)
+    res, err := saveTasks(&test.tasks, testFileName)
     assert.Nil(err)
     if assert.NotNil(res) {
-      assert.Equal(res, test.expected)
+      assert.Equal(*res, test.expected)
     }
   }
 }

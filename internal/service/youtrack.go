@@ -1,27 +1,36 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
+	"os"
 	"time"
 )
  
 type Task struct {
-  ID string `json:"id"`
-  Title string `json:"title"`
-  Status string `json:"Status"`
-  Assignee string `json:"assignee"`
-  CreatedBy string `json:"createdBy"`
-  Updated time.Time `json:"updated"`
-  //TODO:: Createtor
+	Updated   time.Time `json:"updated"`
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	Status    string    `json:"Status"`
+	Assignee  string    `json:"assignee"`
+	CreatedBy string    `json:"createdBy"`
+}
+
+type Tasks []Task
+
+func (t *Tasks) Merge(other *Tasks) {
+  //TODO:: make merge
 }
 
 type YoutrackInterface interface {
-  GetTasks() ([]Task, error)
+  GetTasks() (*Tasks, error)
 }
 
 var (
-  ErrYoutrackPermissionDenied = errors.New("Ошибка доступа к Youtrack")
-  ErrYoutrackNotFound = errors.New("Неверный url для Youtrack")
+  ErrYoutrackPermissionDenied = errors.New("ошибка доступа к Youtrack")
+  ErrYoutrackNotFound = errors.New("неверный url для Youtrack")
+  ErrYoutrackDataFileError = errors.New("ошибка доступа к файлу с данными Youtrack")
+  ErrYoutrackDataSaveError = errors.New("ошибка сохранения файла с данными Youtrack")
 )
 
 var youtrackHub YoutrackInterface
@@ -36,9 +45,9 @@ type YoutrackService struct {
   token string
 }
 
-func (y *YoutrackService) GetTasks() ([]Task, error) {
+func (y *YoutrackService) GetTasks() (*Tasks, error) {
   //TODO:: make request to YOUTACK by y.url + y.token
-  return []Task{}, nil
+  return &Tasks{}, nil
 }
 
 func Init(conf YoutrackConfig) {
@@ -48,8 +57,47 @@ func Init(conf YoutrackConfig) {
   }
 }
 
-func saveTasks(tasks []Task, filename string) ([]Task, error) {
-  // TODO:: load from today-file (or create), add tasks analyze
-  //exist, err := os.Stat()
-  return []Task{}, nil
+func getYoutrackDataTasks(filename string) (*Tasks, error) {
+  _, err := os.Stat(filename)
+
+  if err != nil {
+    if  errors.Is(err, os.ErrNotExist) {
+        _, err = os.Create(filename)
+    }
+    if err != nil {
+      return nil, ErrYoutrackDataFileError
+    }
+  }
+  var data *Tasks
+  youtrackFile, err := os.Open(filename)
+	if err != nil {
+    return nil, ErrYoutrackDataFileError
+	}
+	defer youtrackFile.Close() 
+
+  decoder := json.NewDecoder(youtrackFile)
+  if err := decoder.Decode(&data); err != nil {
+    return nil, ErrYoutrackDataFileError
+  }
+
+  return nil, nil
+}
+
+
+func saveTasks(tasks *Tasks, filename string) (*Tasks, error) {
+  data, err := getYoutrackDataTasks(filename)
+  if err != nil {
+    return nil, err
+  }
+  data.Merge(tasks)
+  file, err := os.Create(filename)
+  if err != nil {
+    return nil, ErrYoutrackDataSaveError
+  }
+  defer file.Close()
+  encoder := json.NewEncoder(file)
+  if err := encoder.Encode(data); err != nil {
+    return nil, ErrYoutrackDataSaveError
+  }
+  return data, nil
 }
