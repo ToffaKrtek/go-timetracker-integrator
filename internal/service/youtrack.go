@@ -16,10 +16,22 @@ type Task struct {
 	CreatedBy string    `json:"createdBy"`
 }
 
-type Tasks []Task
+type Tasks map[string]Task
+
+func MakeTasks(tasksSlice []Task) Tasks {
+   tasks := make(Tasks)
+  for _, task := range tasksSlice {
+    if len(task.ID) > 0 {
+    tasks[task.ID] = task
+    }
+  }
+  return tasks
+}
 
 func (t *Tasks) Merge(other *Tasks) {
-  //TODO:: make merge
+  for id, task := range *other {
+    (*t)[id] = task
+  }
 }
 
 type YoutrackInterface interface {
@@ -65,7 +77,8 @@ func getYoutrackDataTasks(filename string) (*Tasks, error) {
         _, err = os.Create(filename)
     }
     if err != nil {
-      return nil, ErrYoutrackDataFileError
+      return nil, err
+      // return nil, ErrYoutrackDataFileError
     }
   }
   var data *Tasks
@@ -77,10 +90,10 @@ func getYoutrackDataTasks(filename string) (*Tasks, error) {
 
   decoder := json.NewDecoder(youtrackFile)
   if err := decoder.Decode(&data); err != nil {
+      return nil, err
     return nil, ErrYoutrackDataFileError
   }
-
-  return nil, nil
+  return data, nil
 }
 
 

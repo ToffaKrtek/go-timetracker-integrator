@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -22,6 +23,44 @@ func TestGet(t *testing.T) {
 
 }
 
+func TestMakeTasks(t *testing.T) {
+  assert := assert.New(t)
+  tasks := MakeTasks([]Task{
+        Task{
+      	ID:        "test-1",
+      	Title:     "test-1 title",
+      	Status:    "closed",
+      	Assignee:  "",
+      	CreatedBy: "",
+      },
+        Task{
+      	ID:        "test-2",
+      	Title:     "test-2 title",
+      	Status:    "open",
+      	Assignee:  "",
+      	CreatedBy: "",
+      },
+  })
+    if assert.NotNil(tasks) {
+      assert.Equal(tasks, Tasks{
+        "test-1": Task{
+      	ID:        "test-1",
+      	Title:     "test-1 title",
+      	Status:    "closed",
+      	Assignee:  "",
+      	CreatedBy: "",
+      },
+        "test-2": Task{
+      	ID:        "test-2",
+      	Title:     "test-2 title",
+      	Status:    "open",
+      	Assignee:  "",
+      	CreatedBy: "",
+      },
+    })
+    }
+}
+
 func TestSaveTasks(t *testing.T){
   assert := assert.New(t)
   tests := []struct{
@@ -30,7 +69,7 @@ func TestSaveTasks(t *testing.T){
   }{
     {
     tasks: Tasks{
-      Task{
+        "test-1": Task{
       	ID:        "test-1",
       	Title:     "test-1 title",
       	Status:    "open",
@@ -39,7 +78,7 @@ func TestSaveTasks(t *testing.T){
       },
     },
     expected: Tasks{
-      Task{
+        "test-1": Task{
       	ID:        "test-1",
       	Title:     "test-1 title",
       	Status:    "open",
@@ -50,14 +89,14 @@ func TestSaveTasks(t *testing.T){
     },
     {
     tasks: Tasks{
-      Task{
+        "test-2": Task{
       	ID:        "test-2",
       	Title:     "test-2 title",
       	Status:    "open",
       	Assignee:  "",
       	CreatedBy: "",
       },
-      Task{
+        "test-1": Task{
       	ID:        "test-1",
       	Title:     "",
       	Status:    "closed",
@@ -66,14 +105,14 @@ func TestSaveTasks(t *testing.T){
       },
     },
     expected: Tasks{
-      Task{
+        "test-1": Task{
       	ID:        "test-1",
       	Title:     "test-1 title",
       	Status:    "closed",
       	Assignee:  "",
       	CreatedBy: "",
       },
-      Task{
+        "test-2": Task{
       	ID:        "test-2",
       	Title:     "test-2 title",
       	Status:    "open",
@@ -91,4 +130,5 @@ func TestSaveTasks(t *testing.T){
       assert.Equal(*res, test.expected)
     }
   }
+  os.Remove(testFileName)
 }
