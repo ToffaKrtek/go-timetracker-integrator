@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -32,12 +33,23 @@ const (
 	WindowsWatcher
 )
 
+var watchers = []string{
+  "HyprlandWatcher",
+  "XorgWatcher",
+  "WaylandWatcher",
+  "WindowsWatcher",
+}
+
+func (w Watcher) String() string {
+  return watchers[int(w)]
+}
+
 var configFileName string = "go-timetracker-integrator.conf"
 
 func (c Config) String() string {
 	return fmt.Sprintf(
-		"UserName: %s, TgToken: %s, TgChatId: %s, TgTopicId: %s, YTtoken: %s, YTUrl: %s",
-		c.UserName, c.TelegramToken, c.TelegramChatId, c.TelegramTopicId, c.YoutrackToken, c.YoutrackUrl,
+		"UserName: %s, TgToken: %s, TgChatId: %s, TgTopicId: %s, YTtoken: %s, YTUrl: %s, UserWatcher: %s",
+		c.UserName, c.TelegramToken, c.TelegramChatId, c.TelegramTopicId, c.YoutrackToken, c.YoutrackUrl, c.UserWatcher,
 	)
 }
 
@@ -83,6 +95,7 @@ func createConfig(writer io.Writer, reader *bufio.Reader) Config {
 		youtrackToken          string
 		youtrackUrl            string
 		userName               string
+    userWatcherStr  string
 	)
 
 	userName = inputFromCli(writer, reader, "Введите отображаемое имя: ")
@@ -101,6 +114,21 @@ func createConfig(writer io.Writer, reader *bufio.Reader) Config {
 		youtrackToken = inputFromCli(writer, reader, "Токен пользователя Youtrack:")
 		youtrackUrl = inputFromCli(writer, reader, "Url вашего youtrack: ")
 	}
+
+  userWatcherStr = inputFromCli(writer, reader, "Выбор watcher'а:\n1 - Hyprland\n2 - Xorg\n3 - Wayland\n4 - Windows\n")
+  userWatcherNum, err := strconv.Atoi(userWatcherStr)
+  userWatcher := HyprlandWatcher
+  if err != nil {
+	  writer.Write([]byte("Ошибка парсинга watcher'а - применен стандартный"))
+  }else {
+    userWatcherNum -= 1
+    if userWatcherNum < 0 || userWatcherNum > 3 {
+	  writer.Write([]byte("Ошибка парсинга watcher'а - применен стандартный"))
+    }else {
+      userWatcher = Watcher(userWatcherNum)
+    }
+  }
+
 	return Config{
 		UserName:        userName,
 		TelegramToken:   telegramToken,
@@ -108,6 +136,7 @@ func createConfig(writer io.Writer, reader *bufio.Reader) Config {
 		TelegramTopicId: telegramTopicId,
 		YoutrackToken:   youtrackToken,
 		YoutrackUrl:     youtrackUrl,
+    UserWatcher: userWatcher,
 	}
 }
 
