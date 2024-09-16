@@ -18,6 +18,7 @@ var usageTime = make(map[string]time.Duration)
 var fullTime time.Duration
 
 func Run(conf *config.Config) {
+	filename := time.Now().Format("2006-01-02") + ".json"
 	go trackUsage(conf.UserWatcher)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -29,7 +30,7 @@ func Run(conf *config.Config) {
 			select {
 			case <-ticker.C:
 				// Можно оставить пустым, если не нужно записывать в файл каждые 10 секунд
-				report.SaveReport()
+				report.SaveTimeReport(filename, fullTime, usageTime)
 			}
 		}
 	}()
@@ -55,6 +56,7 @@ func trackUsage(watcher config.Watcher) {
 		getActivityFunc = getActivityHyprland()
 	}
 	for {
+    fullTime += time.Second
 		activeApp, err := getActivityFunc()
 		if err != nil {
 			fmt.Println("Ошибка при получении активного приложения:", err)
